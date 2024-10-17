@@ -38,7 +38,7 @@ function(request) {
                 box(
                     title = "Overview",
                     p("Welcome to the Data Validator webpage. This tool allows you to validate data interactively by uploading a dataset and rules file. To get started, go to the validator tab on the left."),
-                    HTML(paste0('<iframe width="560" height="315" src="',config$overview,'" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>')),
+                    HTML(paste0('<iframe width="560" height="315" src="',config$overview,'" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen require-corp credentialless (Chrome > 96)></iframe> ></iframe>')),
                     width = 12
                 ),
                 box(
@@ -55,6 +55,7 @@ function(request) {
             ),
             tabItem(
                 tabName = "validator",
+                tags$script(src = "https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"),
                 fluidRow(
                     column(4,
                            fileInput("file", NULL,
@@ -102,7 +103,7 @@ function(request) {
                 box(
                     title = "Tutorial",
                     p("Welcome to the Data Validator webpage. This tool allows you to validate data interactively by uploading a dataset and rules file. To get started, go to the validator tab on the left."),
-                    HTML(paste0('<iframe width="560" height="315" src="',config$tutorial,'" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>')),
+                    HTML(paste0('<iframe width="560" height="315" src="',config$tutorial,'" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen require-corp credentialless (Chrome > 96)></iframe> ></iframe>')),
                     width = 12
                 ),
                 box(

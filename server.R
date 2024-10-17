@@ -1,5 +1,5 @@
 function(input, output, session) {
-
+  
   rules <- reactive({
     if(!isTruthy(config$rules_to_use)){
       file_rules = input$file_rules$datapath
@@ -14,8 +14,10 @@ function(input, output, session) {
   })
   
   validation <- reactive({
-    req(input$file)
-    req(rules())
+    
+    if(isTruthy(input$file) && isTruthy(rules())){
+    # req(input$file)
+    # req(rules())
     validate_function <- function(){
       data_names <- input$file$name[!grepl(".zip$", input$file$name)]
       validate_data(
@@ -49,14 +51,17 @@ function(input, output, session) {
       )
       return(validate_function())
     })
+    }
   })
   
   
   
   output$error_query <- renderUI({
-    req(input$file)
-    req(validation()$data_formatted)
-    req(validation()$results)
+    if(isTruthy(input$file) && isTruthy(validation()$data_formatted) && isTruthy(validation()$results)){
+    
+    # req(input$file)
+    # req(validation()$data_formatted)
+    # req(validation()$results)
     
     lapply(1:length(validation()$data_formatted), function(x){
       #Report tables to view ----
@@ -92,7 +97,11 @@ function(input, output, session) {
       })
       
       rows_for_rules_selected <- reactive({
-        req(validation()$report[[x]], validation()$data_formatted[[x]], input[[paste0("show_report", x, "_rows_selected")]])
+          # req(validation()$report[[x]], validation()$data_formatted[[x]], input[[paste0("show_report", x, "_rows_selected")]])
+        if (isTruthy(validation()$report[[x]]) && 
+            isTruthy(validation()$data_formatted[[x]]) && 
+            isTruthy(input[[paste0("show_report", x, "_rows_selected")]])) {
+
         tryCatch({
           rows_for_rules(data_formatted = validation()$data_formatted[[x]], 
                          report = validation()$report[[x]], 
@@ -110,7 +119,7 @@ function(input, output, session) {
                 body = paste0(e$message))
           NULL
         })
-        
+        }
       })
       
       output[[paste0("report_selected", x)]] <- DT::renderDataTable({
@@ -214,6 +223,7 @@ function(input, output, session) {
       )
     }
     )
+    }
   })
   
   output$rules_dt <- DT::renderDataTable({
@@ -246,7 +256,7 @@ function(input, output, session) {
   })
   
   output$dev_options <- renderUI({
-    req(config$dev)
+    if(isTruthy(config$dev)){
     tagList(
       fluidRow(
         bs4Dash::popover(
@@ -276,10 +286,12 @@ function(input, output, session) {
           content = "For Developmental & Debugging Purposes")
       )
     )
+    }
   })
   
   output$alert <- renderUI({
-    req(validation()$results)
+    if(isTruthy(validation()$results)){
+    # req(validation()$results)
     if(isTRUE(!any(validation()$issues))){
       bs4Dash::popover(
         downloadButton("download_certificate", "Download Certificate", style = "background-color: #ffffff; width: 100%;"),
@@ -294,6 +306,7 @@ function(input, output, session) {
     }
     else{
       NULL
+    }
     }
   })
   
@@ -331,4 +344,3 @@ function(input, output, session) {
     }
   )
 }
-
