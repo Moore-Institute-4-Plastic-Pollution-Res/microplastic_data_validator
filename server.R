@@ -1,4 +1,5 @@
 function(input, output, session) {
+  
   rules <- reactive({
     if(!isTruthy(config$rules_to_use)){
       file_rules = input$file_rules$datapath

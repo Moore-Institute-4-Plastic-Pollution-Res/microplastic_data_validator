@@ -1,4 +1,5 @@
 # Get the rows in the data that violate the specified rules.
+
 rows_for_rules <- function(data_formatted,
                            report,
                            broken_rules,
