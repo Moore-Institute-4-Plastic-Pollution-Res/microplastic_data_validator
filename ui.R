@@ -93,14 +93,8 @@ function(request) {
                    title: 'Download rules template file',
                    content: 'This is a file that can be used as a template when collecting data so that it conforms to most of the rules tested in this portal.',
                    placement: 'right',
-                   trigger: 'manual'
-                 }).hover(
-                   function() {
-                     $(this).popover('show');
-                   }, function() {
-                     $(this).popover('hide');
-                   }
-                 );
+                   trigger: 'hover'
+                   });
                });
              ")),
                                           ),
@@ -125,21 +119,40 @@ function(request) {
                     br(),
                     tags$ol(
                         tags$li("Both the data and rules files must be in .csv or .xlsx format. Examples for how to structure and query the data and rules can be found below:"),
-                        bs4Dash::popover(
                             downloadButton("download_rules", "Download Sample Rules", style = "background-color: #2a9fd6;"),
-                            title = "Download rules file",
-                            content = "This is an example file that can be used in tandem with the valid or invalid data files to test out the tool."
-                        ),
-                        bs4Dash::popover(
+                        tags$script(HTML("
+               $(document).ready(function(){
+                 $('#download_rules').popover({
+                   title: 'Download rules file',
+                   content: 'This is an example file that can be used in tandem with the valid or invalid data files to test out the tool.',
+                   placement: 'bottom',
+                   trigger: 'hover'
+                   });
+               });
+             ")),
                             downloadButton("download_good_sample", "Download Valid Sample Data", style = "background-color: #28a745;"),
-                            title = "Download valid example data",
-                            content = "This is an example file that can be used in tandem with the example rules file to test out the tool for its performance with a dataset that is 100% validated."
-                        ),
-                        bs4Dash::popover(
+                        tags$script(HTML("
+               $(document).ready(function(){
+                 $('#download_good_sample').popover({
+                   title: 'Download valid example data',
+                   content: 'This is an example file that can be used in tandem with the example rules file to test out the tool for its performance with a dataset that is 100% validated.',
+                   placement: 'bottom',
+                   trigger: 'hover'
+                   });
+               });
+             ")),
                             downloadButton("download_sample", "Download Invalid Sample Data", style = "background-color: #e4606d;"), 
-                            title = "Download invalid example data",
-                            content = "This is an example file that can be used in tandem with the example rules file to test out the tool for its performance with a dataset that isn't 100% validated."
-                        ),
+                        tags$script(HTML("
+    $(document).ready(function(){
+      $('#download_sample').popover({
+        title: 'Download invalid example data',
+        content: 'This is an example file that can be used in tandem with the example rules file to test out the tool for its performance with a dataset that isn’t 100% validated.',
+        placement: 'bottom',
+        trigger: 'hover' 
+      });
+    });
+  ")),
+                        
                         p(),
                         tags$li("Uploaded the data and rules file on the validator tab. NOTE: If using the examples you will need to first unzip them."),
                         tags$image(src = "upload.png", width = "50%"),
