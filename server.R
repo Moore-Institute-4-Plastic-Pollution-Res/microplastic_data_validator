@@ -291,14 +291,22 @@ function(input, output, session) {
   
   output$alert <- renderUI({
     if(isTruthy(validation()$results)){
-    # req(validation()$results)
+    #req(validation()$results)
     if(isTRUE(!any(validation()$issues))){
-      bs4Dash::popover(
+      tagList(
         downloadButton("download_certificate", "Download Certificate", style = "background-color: #ffffff; width: 100%;"),
-        title = "Certificate of Valid Data",
-        placement = "bottom",
-        content = "Downloading this certificate will provide a verifiable record that you had a validated dataset at the time of certificate download. This certificate will also be shared with a remote repository for verification purposes.")
-      
+        tags$script(HTML("
+    $(document).ready(function(){
+      $('#download_certificate').popover({
+        title: 'Certificate of Valid Data',
+        content: 'Downloading this certificate will provide a verifiable record that you had a validated dataset at the time of certificate download. This certificate will also be shared with a remote repository for verification purposes.',
+        placement: 'bottom',
+        trigger: 'hover' 
+      });
+    });
+  "))
+      )
+
       #HTML('<button type="button" class="btn btn-success btn-lg btn-block">SUCCESS</button>')
     }
     else if(isTRUE(any(validation()$issues))){
