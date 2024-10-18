@@ -26,5 +26,5 @@ downloadButton <- function(...) {
   tag
 }
 
-
+sapply(list.files(pattern = "[.]R$", path = "R/", full.names = TRUE), FUN = source)
 
