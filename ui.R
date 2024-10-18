@@ -84,12 +84,26 @@ function(request) {
                                    content = "Upload the rules csv to use to validate the data csv"
                                ) 
                            },
-                           bs4Dash::popover(
-                               downloadButton("download_rules_excel", "Data Template", style = "background-color: #ed6ca7;"),
-                               title = "Download rules template file",
-                               content = "This is a file that can be used as a template when collecting data so that it conforms to most of the rules tested in this portal."
-                           )
-                    ), 
+                           downloadButton("download_rules_excel", 
+                                          "Data Template",
+                                          style = "background-color: #ed6ca7;"), # Define the popover in the button's HTML using data attributes
+                           tags$script(HTML("
+               $(document).ready(function() {
+                 $('#download_rules_excel').popover({
+                   title: 'Download rules template file',
+                   content: 'This is a file that can be used as a template when collecting data so that it conforms to most of the rules tested in this portal.',
+                   placement: 'right',
+                   trigger: 'manual'
+                 }).hover(
+                   function() {
+                     $(this).popover('show');
+                   }, function() {
+                     $(this).popover('hide');
+                   }
+                 );
+               });
+             ")),
+                                          ),
                     column(4, 
                            uiOutput("alert"))),
                 uiOutput("error_query"),
