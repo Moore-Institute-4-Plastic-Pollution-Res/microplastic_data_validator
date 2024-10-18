@@ -45,7 +45,7 @@ function(request) {
                     title = "Contribute",
                     collapsed = F,
                     p("Join our team to build this tool!"),
-                    HTML(paste0('<a class="btn btn-info" href = "', config$github,'" role = "button" >Github</a>')),
+                    HTML(paste0('<a class="btn btn-info" href = "', config$github,'" role = "button" target="_blank">Github</a>')),
                     boxLayout(
                         type = "columns",
                         lapply(config$contributors, function(x){x})
@@ -197,8 +197,8 @@ function(request) {
         
     ),
 
-    footer = dashboardFooter(left = fluidRow(column(1,a(href = config$twitter, icon('twitter'))),
-                                             column(1,a(href = config$github, icon('github'))),
+    footer = dashboardFooter(left = fluidRow(column(1,a(href = config$twitter, target = "_blank", icon('twitter'))),
+                                             column(1,a(href = config$github, target = "_blank",icon('github'))),
                                              column(1,a(href = config$license, img(src= "CC.png", width= 18, height= 18))))
     )
 )
