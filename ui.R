@@ -69,7 +69,19 @@ function(request) {
                                               ".zip")) %>%
                                bs4Dash::popover(
                                    title = "Upload CSV to validate",
-                                   content = "This is where you upload the csv, zip, and/or xlsx files file that you want to validate.")
+                                   content = "This is where you upload the csv, zip, and/or xlsx files file that you want to validate."),
+                           
+                           a(actionButton("share_data",
+                                          label = "Share Your Data",
+                                          status = "success",
+                                          icon("envelope")
+                                          ),
+                             href="mailto:win@mooreplasticresearch.org?subject=Microplastic Data Portal data sharing!") |> 
+                             bs4Dash::popover(title = "Share your data with us!",
+                                              content = "Would you like to share your uploaded data? Click here to email us at
+                                              win@mooreplasticresearch.org",
+                                              placement = "bottom"
+                                              )
                     ),
                     column(4,
                            if(!isTruthy(config$rules_to_use)){
@@ -100,6 +112,9 @@ function(request) {
                                           ),
                     column(4, 
                            uiOutput("alert"))),
+                br(),
+                br(),
+
                 uiOutput("error_query"),
                 uiOutput("dev_options")
             ),
