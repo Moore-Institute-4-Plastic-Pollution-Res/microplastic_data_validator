@@ -1,3 +1,4 @@
+options(shiny.maxRequestSize=30*1024^2)
 function(input, output, session) {
   
   rules <- reactive({
@@ -65,7 +66,7 @@ function(input, output, session) {
     
     lapply(1:length(validation()$data_formatted), function(x){
       #Report tables to view ----
-      output[[paste0("show_report", x)]] <- DT::renderDataTable({
+      output[[paste0("show_report", x)]] <- DT::renderDataTable(server=TRUE,{
         #req(nrow(overview_table) > 0)
         datatable({rules_broken(results = validation()$results[[x]], show_decision = input[[paste0("show_decision", x)]]) %>%
             select(description, status, expression, name) %>%
@@ -76,8 +77,8 @@ function(input, output, session) {
               scrollX = TRUE,
               sScrollY = '50vh', 
               scrollCollapse = TRUE,
-              lengthChange = FALSE, 
-              #pageLength = 5,
+              lengthChange = TRUE, 
+              pageLength = 5,
               paging = FALSE,
               searching = TRUE,
               fixedColumns = TRUE,
@@ -122,7 +123,7 @@ function(input, output, session) {
         }
       })
       
-      output[[paste0("report_selected", x)]] <- DT::renderDataTable({
+      output[[paste0("report_selected", x)]] <- DT::renderDataTable(server=TRUE,{
         if(isTruthy(input[[paste0("show_report", x, "_rows_selected")]]) & !is.null(rows_for_rules_selected())){
           datatable({rows_for_rules_selected() |>
               mutate(across(everything(), check_images)) |>
@@ -131,21 +132,21 @@ function(input, output, session) {
               escape = FALSE,
               filter = "top", 
               extensions = 'Buttons',
-              options = list(
-                searchHighlight = TRUE,
-                scrollX = TRUE,
-                sScrollY = '50vh', 
-                scrollCollapse = TRUE,
-                lengthChange = FALSE, 
-                #pageLength = 5,
-                paging = FALSE,
-                searching = TRUE,
-                fixedColumns = TRUE,
-                autoWidth = FALSE,
-                ordering = TRUE,
-                dom = 'Bfrtip',
-                buttons = c('copy', 'csv', 'excel', 'pdf')),
-              #style = "bootstrap",
+               options = list(
+                 searchHighlight = TRUE,
+                 scrollX = TRUE,
+                 sScrollY = '50vh', 
+                 scrollCollapse = TRUE,
+                 lengthChange = TRUE, 
+                 pageLength = 10,
+              #   paging = FALSE,
+                 searching = TRUE,
+                 fixedColumns = TRUE,
+                 autoWidth = FALSE,
+                 ordering = TRUE,
+                 dom = 'Bfrtip',
+                 buttons = c('copy', 'csv', 'excel', 'pdf')),
+              style = "bootstrap",
               class = "display") %>% 
             formatStyle(
               if(any(validation()$results[[x]]$status %in% c("error", "warning"))){
@@ -163,21 +164,21 @@ function(input, output, session) {
               escape = FALSE,
               filter = "top", 
               extensions = 'Buttons',
-              options = list(
-                searchHighlight = TRUE,
-                scrollX = TRUE,
-                sScrollY = '50vh', 
-                scrollCollapse = TRUE,
-                lengthChange = FALSE, 
-                #pageLength = 5,
-                paging = FALSE,
-                searching = TRUE,
-                fixedColumns = TRUE,
-                autoWidth = FALSE,
-                ordering = TRUE,
-                dom = 'Bfrtip',
-                buttons = c('copy', 'csv', 'excel', 'pdf')),
-              #style = "bootstrap",
+               options = list(
+                 searchHighlight = TRUE,
+                 scrollX = TRUE,
+                 sScrollY = '50vh', 
+                 scrollCollapse = TRUE,
+                 lengthChange = TRUE, 
+                 pageLength = 10,
+              #   paging = FALSE,
+                 searching = TRUE,
+                 fixedColumns = TRUE,
+                 autoWidth = FALSE,
+                 ordering = TRUE,
+                 dom = 'Bfrtip',
+                 buttons = c('copy', 'csv', 'excel', 'pdf')),
+              style = "bootstrap",
               class = "display")
         }
         
@@ -211,6 +212,9 @@ function(input, output, session) {
                 width = 6
             ), 
             box(title = "Issues Selected",
+                # Download buttons for full data set
+                fluidRow(
+                column(downloadButton("download_csv", label = "Download CSV"), width = 3)                ),
                 id = paste0("issue_selected", x),
                 background = "white",
                 DT::dataTableOutput(paste0("report_selected", x)),
@@ -225,6 +229,33 @@ function(input, output, session) {
     )
     }
   })
+  
+  # Download full table values of selected
+  output$download_csv <- downloadHandler(
+    filename = function() {"invalid_data.csv"},
+    content = function(file){
+      write.csv(rows_for_rules_selected(), file)
+    }
+  )
+  
+  #Downloads ----
+  output$download_certificate <- downloadHandler(
+    filename = function() {"certificate.csv"},
+    content = function(file) {write.csv(
+      certificate_df(x = validation()), 
+      file, 
+      row.names = F)}
+  )
+  
+  
+  output$download_sample <- downloadHandler(
+    filename = function() {"invalid_data.zip"},
+    content = function(file) {
+      zip::zipr(file, config$invalid_data_example)
+    }
+  )
+  
+  
   
   output$rules_dt <- DT::renderDataTable({
     if(grepl("(\\.csv$)", ignore.case = T, as.character(rules()))){
@@ -241,8 +272,8 @@ function(input, output, session) {
                 scrollX = TRUE,
                 sScrollY = '50vh', 
                 scrollCollapse = TRUE,
-                lengthChange = FALSE, 
-                #pageLength = 5,
+                lengthChange = TRUE, 
+                pageLength = 5,
                 paging = FALSE,
                 searching = TRUE,
                 fixedColumns = TRUE,
