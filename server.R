@@ -60,10 +60,6 @@ function(input, output, session) {
   output$error_query <- renderUI({
     if(isTruthy(input$file) && isTruthy(validation()$data_formatted) && isTruthy(validation()$results)){
     
-    # req(input$file)
-    # req(validation()$data_formatted)
-    # req(validation()$results)
-    
     lapply(1:length(validation()$data_formatted), function(x){
       #Report tables to view ----
       output[[paste0("show_report", x)]] <- DT::renderDataTable(server=TRUE,{
@@ -183,6 +179,15 @@ function(input, output, session) {
         }
         
       })
+      
+      # Download full table values of selected
+      output$download_csv <- downloadHandler(
+        filename = function() {"invalid_data.csv"},
+        content = function(file){
+          write.csv(rows_for_rules_selected(), file, col.names = TRUE)
+        }
+      )
+      
       box(title = div(validation()$data_names[[x]], ": ", 
                       icon("circle-check", style = "color:black;"), 
                       sum(validation()$results[[x]][["status"]] == "success"), ", ", 
@@ -225,18 +230,14 @@ function(input, output, session) {
           ),
           width = 12
       )
+      
+
+      
     }
     )
     }
   })
   
-  # Download full table values of selected
-  output$download_csv <- downloadHandler(
-    filename = function() {"invalid_data.csv"},
-    content = function(file){
-      write.csv(rows_for_rules_selected(), file)
-    }
-  )
   
   #Downloads ----
   output$download_certificate <- downloadHandler(
