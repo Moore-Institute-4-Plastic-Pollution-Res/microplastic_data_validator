@@ -16,7 +16,6 @@ library(listviewer)
 library(readxl)
 library(stringr)
 library(openxlsx)
-
 config <- config::get(file = "config_pl.yml")
 
 # Workaround for Chromium Issue 468227

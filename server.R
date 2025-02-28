@@ -55,8 +55,6 @@ function(input, output, session) {
     }
   })
   
-  
-  
   output$error_query <- renderUI({
     if(isTruthy(input$file) && isTruthy(validation()$data_formatted) && isTruthy(validation()$results)){
     
@@ -127,7 +125,7 @@ function(input, output, session) {
               rownames = FALSE,
               escape = FALSE,
               filter = "top", 
-              extensions = 'Buttons',
+              # extensions = 'Buttons',
                options = list(
                  searchHighlight = TRUE,
                  scrollX = TRUE,
@@ -140,8 +138,8 @@ function(input, output, session) {
                  fixedColumns = TRUE,
                  autoWidth = FALSE,
                  ordering = TRUE,
-                 dom = 'Bfrtip',
-                 buttons = c('copy', 'csv', 'excel', 'pdf')),
+                 dom = 'frtip'),
+                 # buttons = c('copy', 'csv', 'excel', 'pdf')),
               style = "bootstrap",
               class = "display") %>% 
             formatStyle(
@@ -151,6 +149,7 @@ function(input, output, session) {
               else{NULL},
               backgroundColor =  '#FF817e'
             )
+          
         }
         else{
           datatable({validation()$data_formatted[[x]] |>
@@ -159,7 +158,7 @@ function(input, output, session) {
               rownames = FALSE,
               escape = FALSE,
               filter = "top", 
-              extensions = 'Buttons',
+              # extensions = 'Buttons',
                options = list(
                  searchHighlight = TRUE,
                  scrollX = TRUE,
@@ -172,21 +171,45 @@ function(input, output, session) {
                  fixedColumns = TRUE,
                  autoWidth = FALSE,
                  ordering = TRUE,
-                 dom = 'Bfrtip',
-                 buttons = c('copy', 'csv', 'excel', 'pdf')),
+                 dom = 'frtip'),
+                 # buttons = c('copy', 'csv', 'excel', 'pdf')),
               style = "bootstrap",
               class = "display")
         }
         
       })
-      
-      # Download full table values of selected
-      output$download_csv <- downloadHandler(
+      # Download button widgets ----
+      # Download full table values of selected - CSV
+      output[[paste0("download_csv", x)]] <- downloadHandler(
         filename = function() {"invalid_data.csv"},
         content = function(file){
-          write.csv(rows_for_rules_selected(), file, col.names = TRUE)
+          write.csv(rows_for_rules_selected(), file, colNames = TRUE)
         }
       )
+      
+      # Download XLSX
+      output[[paste0("download_xlsx",x)]] <- downloadHandler(
+        filename = function() {"invalid_data.xlsx"},
+        content = function(file){
+        write.xlsx(rows_for_rules_selected(), file, col.names = TRUE)
+        }
+      )
+      
+      # Download PDF
+      output[[paste0("download_pdf",x)]] <- downloadHandler(
+        filename = function() {"invalid_data.pdf"},
+        content = function(file){
+          tempReport <- file.path(tempdir(), "report.Rmd")
+          file.copy("report.Rmd", tempReport, overwrite = TRUE)
+        
+          params = list(data = rows_for_rules_selected())
+          rmarkdown::render(tempReport, output_file = file,
+                            params = params,
+                            envir = new.env(parent = globalenv())
+                            )
+        }
+      )
+
       
       box(title = div(validation()$data_names[[x]], ": ", 
                       icon("circle-check", style = "color:black;"), 
@@ -219,7 +242,10 @@ function(input, output, session) {
             box(title = "Issues Selected",
                 # Download buttons for full data set
                 fluidRow(
-                column(downloadButton("download_csv", label = "Download CSV"), width = 3)                ),
+                column(1,downloadButton(paste0("download_csv",x), label = "CSV")),
+                column(1,downloadButton(paste0("download_xlsx",x), label = "Excel")),
+                column(1,downloadButton(paste0("download_pdf",x), label = "PDF"))
+                ),
                 id = paste0("issue_selected", x),
                 background = "white",
                 DT::dataTableOutput(paste0("report_selected", x)),
