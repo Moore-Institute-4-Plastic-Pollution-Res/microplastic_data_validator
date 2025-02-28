@@ -183,7 +183,7 @@ function(input, output, session) {
       output[[paste0("download_csv", x)]] <- downloadHandler(
         filename = function() {"invalid_data.csv"},
         content = function(file){
-          write.csv(rows_for_rules_selected(), file, colNames = TRUE)
+          write.csv(rows_for_rules_selected(), file, col.names = TRUE)
         }
       )
       
