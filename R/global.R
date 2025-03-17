@@ -586,9 +586,62 @@ check_exists_in_zip <- function(zip_path, file_name) {
 #' @export
 check_images <- function(x){
     ifelse(grepl("https://.*\\.png|https://.*\\.jpg", x),
-           paste0('<img src ="', x, '" height = "50"></img>'),
-           x)
+           paste0('<img src ="', x, '" height = "50"></img>')
+           )
 }
+
+# Unzip folder ---
+unzip_files <- function(zip_data) {
+  if (is.null(zip_data) ||
+      !grepl("\\.zip$", zip_data, ignore.case = TRUE)) {
+    return(NULL)
+  }
+  # Create temp directory for extracted files
+  extract_dir <- tempdir()
+  
+  unzip(zip_data, exdir = extract_dir)
+}
+  
+  
+# Base64 images ---
+base64images <- function(zip_data, data_formatted){
+  extracted_files <- unzip(zip_data)
+  # If empty zip file
+  if(is.null(extracted_files)){
+    return(NULL)
+  }
+  #Filter image files
+  image_files <- extracted_files[grepl("(?i)\\.png|\\.jpg", extracted_files)]
+  #No images in zip
+  if(length(image_files) == 0){
+    return(data_formatted)
+  }
+  # Base64 conversion ---
+  base64_images <- lapply(image_files, function(img) {
+    # mime type based on image extension
+    mime_type <- ifelse(grepl("(?i)\\.jpg", image_files), "image/jpeg", "image/png")
+    base64enc::dataURI(file=img,mime=mime_type)
+  })
+  
+  names(base64_images) <- basename(image_files)
+  
+  return(base64_images)
+  
+}
+
+
+
+
+
+# Check if images column occur in the data table and then join the base64 
+# image from the zip file 
+check_images_zip <- function(x){
+  if(grepl("(?i)\\.png|\\.jpg",x) & !grepl("https://.*\\.png|https://.*\\.jpg", x)){
+    
+  }
+}
+
+
 
 #' @title Check and format non-image hyperlinks
 #'
