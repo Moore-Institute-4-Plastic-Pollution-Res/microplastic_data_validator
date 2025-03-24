@@ -586,11 +586,19 @@ check_exists_in_zip <- function(zip_path, file_name) {
 #' @export
 check_images <- function(x){
     ifelse(grepl("https://.*\\.png|https://.*\\.jpg", x),
-           paste0('<img src ="', x, '" height = "50"></img>')
+           paste0('<img src ="', x, '" height = "50"></img>'),
+           x
            )
 }
 
-# Unzip folder ---
+#' Title
+#'
+#' @param zip_data 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 unzip_files <- function(zip_data) {
   if (is.null(zip_data) ||
       !grepl("\\.zip$", zip_data, ignore.case = TRUE)) {
@@ -602,129 +610,62 @@ unzip_files <- function(zip_data) {
   unzip(zip_data, exdir = extract_dir)
 }
   
-  
 # Base64 images joined to data_formatted ---
-images_join <- function(zip_data, data_formatted){
-  extracted_files <- unzip(zip_data)
+#' Title
+#'
+#' @param zip_data 
+#' @param data_formatted 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+images_join <- function(zip_data, data_formatted) {
+  extracted_files <- unzip_files(zip_data)
   # If empty zip file
-  if(is.null(extracted_files)){
+  if (is.null(extracted_files)) {
     return(NULL)
   }
   #Filter image files
   image_files <- extracted_files[grepl("(?i)\\.png|\\.jpg", extracted_files)]
   #No images in zip
-  if(length(image_files) == 0){
+  if (length(image_files) == 0) {
     return(data_formatted)
   }
   # Base64 conversion ---
   base64_images <- lapply(image_files, function(img) {
     # mime type based on image extension
-    mime_type <- ifelse(grepl("(?i)\\.jpg", image_files), "image/jpeg", "image/png")
-    base64enc::dataURI(file=img,mime=mime_type)
+    mime_type <- ifelse(grepl("(?i)\\.jpg", image_files),
+                        "image/jpeg",
+                        "image/png")
+    base64enc::dataURI(file = img, mime = mime_type)
   })
   #Assign file names to the list
   names(base64_images) <- basename(image_files)
   # Join data_formatted with image base64
-  data_formatted <- lapply(data_formatted, function(df) {
+  data_check <- lapply(data_formatted, function(df) {
     # Identify column with image extensions
     image_columns <- names(df)[sapply(df, function(col) {
-      any(grepl("(?i)\\.jpg|\\.png",df))  
+      any(
+        grepl("(?i)\\.jpg|\\.png", col) &
+          !grepl("https://.*\\.png|https://.*\\.jpg", col)
+      )
     })]
-    
     if (length(image_columns) > 0) {
       for (col in image_columns) {
         image_lookup <- tibble(
           ImagePath = names(base64_images),
           ImageBase64 = unlist(base64_images)
         )
-        # error: ! Can't join `x$SpectraMatchValue` with `y$ImagePath` due to incompatible types.
+        print(image_lookup)
         df <- df |> left_join(image_lookup, by = setNames("ImagePath", col))
       }
     }
-    
-    #return(df)
-  })
-  
-  return(data_formatted)
-}
-
-
-base64images <- function(zip_data, data_formatted) {
-  # Extract files from the ZIP
-  extracted_files <- unzip(zip_data, exdir = tempdir())  # Extract images
-  
-  if (is.null(extracted_files)) return(data_formatted)  # Return original data if no images
-  
-  # 🔹 Identify only image files (PNG, JPG)
-  image_files <- extracted_files[grepl("(?i)\\.jpg$|\\.png$", extracted_files)]
-  
-  if (length(image_files) == 0) return(data_formatted)  # No images found
-  
-  # 🔹 Convert images to Base64
-  base64_images <- lapply(image_files, function(img) {
-    mime_type <- if (grepl("\\.jpg$", img, ignore.case = TRUE)) "image/jpeg" else "image/png"
-    base64enc::dataURI(file = img, mime = mime_type)
-  })
-  
-  # 🔹 Assign file names to the list
-  names(base64_images) <- basename(image_files)
-  
-  # 🔹 Replace matching image filenames in any column
-  data_formatted <- lapply(data_formatted, function(df) {
-    
-    # 🔹 Find columns that contain image file names
-    image_columns <- names(df)[sapply(df, function(col) {
-      any(grepl("(?i)\\.jpg$|\\.png$", col))  # Check if column has image filenames
-    })]
-    
-    if (length(image_columns) > 0) {
-      for (col in image_columns) {
-        # Replace file names with Base64 if they match
-        df[[col]] <- ifelse(df[[col]] %in% names(base64_images), base64_images[df[[col]]], df[[col]])
-      }
-    }
-    
     return(df)
   })
-  
-  return(data_formatted)
+  return(data_check)
 }
 
-
-
-# Find column with image column
-#   image_detection <- lapply(names(data_formatted), function(x) {
-#     image_present <- any(
-#       str_detect((as.character(data_formatted[[x]])), "(?i)\\.png|\\.jpg"),
-#       na.rm = TRUE
-#     )
-#     if (image_present) {
-#       data_formatted[[x]] <- data_formatted[[x]] |>
-#         mutate(Image = "y")
-#       print(colnames(data_formatted[[x]]))
-#     }
-#   })
-# }
-
-image_columns <- names(df)[sapply(df, function(col) {
-  any(grepl("(?i)\\.jpg|\\.png", col, na.rm = TRUE))  # Check if any value in the column has an image extension
-})]
-
-particles <- data_formatted$particles
-
-names(particles)[sapply(particles, function(col){
-  any(grepl("(?i)\\.png|\\.jpg", col))
-})]
-
-
-
-# Check if images column occur in the data table and then join the base64 
-# image from the zip file 
-check_images_zip <- function(x){
-  if(grepl("(?i)\\.png|\\.jpg",x) & !grepl("https://.*\\.png|https://.*\\.jpg", x)){
-    
-  }
-}
 
 
 
