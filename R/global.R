@@ -250,6 +250,94 @@ reformat_rules <- function(rules, data_formatted, zip_data = NULL){
     rules
 }
 
+#' @title Unzip zip folders 
+#'
+#' @description
+#' This function unzips zip folders uploaded by the user and stores them 
+#' in a temporary directory for compatibility in webR
+#'
+#' @param zip_data The zip folder uploaded by the user with additional files.
+#'
+#' @examples
+#' unzip_files(zip_data = valid_zip)
+#' 
+#' @return A character vector of the file paths of the extracted files.
+#' @export
+#'
+unzip_files <- function(zip_data) {
+  if (is.null(zip_data) ||
+      !any(grepl("\\.zip$", zip_data, ignore.case = TRUE))) {
+    return(NULL)
+  }
+  # Create temp directory for extracted files
+  extract_dir <- tempdir()
+  
+  unzip(zip_data, list = FALSE, exdir = extract_dir)
+}
+
+# Base64 images joined to data_formatted ---
+#' @title Joining of Images to data
+#' @description
+#' To QA/QC images by joining them to the list of data frames as a new column 
+#' ImageBase64 of images converted to Base64 
+#'      
+#' @param zip_data A file path to a zip folder with additional data to check
+#' @param data_formatted A named list of data.frames with data
+#'
+#' @return A list of data.frames with data
+#' 
+#' @examples
+#' images_join(zip_data = valid_zip, data_formatted = valid_data)
+#' 
+#' @export
+#'
+#' images_join(zip_data = valid_zip, files_data = valid_data)
+images_join <- function(zip_data, files_data, data_names) {
+  extracted_files <- unzip_files(zip_data)
+  data_formatted <- read_data(files_data = files_data, data_names = data_names)
+  # If empty zip file
+  if (is.null(extracted_files)) {
+    return(NULL)
+  }
+  #Filter image files
+  image_files <- extracted_files[grepl("(?i)\\.png|\\.jpg", extracted_files)]
+  #No images in zip
+  if (length(image_files) == 0) {
+    return(data_formatted)
+  }
+  # Base64 conversion ---
+  base64_images <- lapply(image_files, function(img) {
+    # mime type based on image extension
+    mime_type <- ifelse(grepl("(?i)\\.jpg", image_files),
+                        "image/jpeg",
+                        "image/png")
+    base64enc::dataURI(file = img, mime = mime_type)
+  })
+  #Assign file names to the list
+  names(base64_images) <- basename(image_files)
+  # Join data_formatted with image base64
+  data_check <- lapply(data_formatted, function(df) {
+    # Identify column with image extensions
+    image_columns <- names(df)[sapply(df, function(col) {
+      any(
+        grepl("(?i)\\.jpg|\\.png", col) &
+          !grepl("https://.*\\.png|https://.*\\.jpg", col)
+      )
+    })]
+    if (length(image_columns) > 0) {
+      for (col in image_columns) {
+        image_lookup <- tibble(
+          ImagePath = names(base64_images),
+          ImageBase64 = unlist(base64_images)
+        )
+        print(image_lookup)
+        df <- df |> left_join(image_lookup, by = setNames("ImagePath", col))
+      }
+    }
+    return(df)
+  })
+  return(data_check)
+}
 
 #' @title Validate data based on specified rules
 #'
@@ -330,11 +418,14 @@ validate_data <- function(files_data, data_names = NULL, file_rules = NULL, zip_
                        "wcm", "widget", "wmf", "workflow", "wpk", "ws", "wsc",
                        "wsf", "wsh", "xap", "xqt", "zlq"))
         }
+      data_formatted <- images_join(zip_data = zip_data, files_data = files_data, data_names = data_names)
+    } else{
+      data_formatted <- read_data(files_data = files_data, data_names = data_names)
     }
     
     rules <- read_rules(file_rules)
     
-    data_formatted <- read_data(files_data = files_data, data_names = data_names)
+    #data_formatted <- read_data(files_data = files_data, data_names = data_names)
     
     if (!"dataset" %in% names(rules) & length(names(data_formatted)) > 1) {
         stop("If there is more than one dataset then a dataset column must be specified in the rules file to describe which rule applies to which dataset.")
@@ -590,82 +681,6 @@ check_images <- function(x){
            x
            )
 }
-
-#' Title
-#'
-#' @param zip_data 
-#'
-#' @return
-#' @export
-#'
-#' @examples
-unzip_files <- function(zip_data) {
-  if (is.null(zip_data) ||
-      !grepl("\\.zip$", zip_data, ignore.case = TRUE)) {
-    return(NULL)
-  }
-  # Create temp directory for extracted files
-  extract_dir <- tempdir()
-  
-  unzip(zip_data, exdir = extract_dir)
-}
-  
-# Base64 images joined to data_formatted ---
-#' Title
-#'
-#' @param zip_data 
-#' @param data_formatted 
-#'
-#' @return
-#' @export
-#'
-#' @examples
-images_join <- function(zip_data, data_formatted) {
-  extracted_files <- unzip_files(zip_data)
-  # If empty zip file
-  if (is.null(extracted_files)) {
-    return(NULL)
-  }
-  #Filter image files
-  image_files <- extracted_files[grepl("(?i)\\.png|\\.jpg", extracted_files)]
-  #No images in zip
-  if (length(image_files) == 0) {
-    return(data_formatted)
-  }
-  # Base64 conversion ---
-  base64_images <- lapply(image_files, function(img) {
-    # mime type based on image extension
-    mime_type <- ifelse(grepl("(?i)\\.jpg", image_files),
-                        "image/jpeg",
-                        "image/png")
-    base64enc::dataURI(file = img, mime = mime_type)
-  })
-  #Assign file names to the list
-  names(base64_images) <- basename(image_files)
-  # Join data_formatted with image base64
-  data_check <- lapply(data_formatted, function(df) {
-    # Identify column with image extensions
-    image_columns <- names(df)[sapply(df, function(col) {
-      any(
-        grepl("(?i)\\.jpg|\\.png", col) &
-          !grepl("https://.*\\.png|https://.*\\.jpg", col)
-      )
-    })]
-    if (length(image_columns) > 0) {
-      for (col in image_columns) {
-        image_lookup <- tibble(
-          ImagePath = names(base64_images),
-          ImageBase64 = unlist(base64_images)
-        )
-        print(image_lookup)
-        df <- df |> left_join(image_lookup, by = setNames("ImagePath", col))
-      }
-    }
-    return(df)
-  })
-  return(data_check)
-}
-
 
 
 
