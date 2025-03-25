@@ -121,6 +121,7 @@ function(input, output, session) {
         if(isTruthy(input[[paste0("show_report", x, "_rows_selected")]]) & !is.null(rows_for_rules_selected())){
           datatable({rows_for_rules_selected() |>
               mutate(across(everything(), check_images)) |>
+              mutate(across(everything(), check_base64)) |>
               mutate(across(everything(), check_other_hyperlinks))},
               rownames = FALSE,
               escape = FALSE,
@@ -154,6 +155,7 @@ function(input, output, session) {
         else{
           datatable({validation()$data_formatted[[x]] |>
               mutate(across(everything(), check_images)) |>
+              mutate(across(everything(), check_base64)) |>
               mutate(across(everything(), check_other_hyperlinks))},
               rownames = FALSE,
               escape = FALSE,
@@ -242,9 +244,9 @@ function(input, output, session) {
             box(title = "Issues Selected",
                 # Download buttons for full data set
                 fluidRow(
-                column(1,downloadButton(paste0("download_csv",x), label = "CSV")),
-                column(1,downloadButton(paste0("download_xlsx",x), label = "Excel")),
-                column(1,downloadButton(paste0("download_pdf",x), label = "PDF"))
+                column(2,downloadButton(paste0("download_csv",x), label = "CSV")),
+                column(2,downloadButton(paste0("download_xlsx",x), label = "Excel")),
+                column(2,downloadButton(paste0("download_pdf",x), label = "PDF"))
                 ),
                 id = paste0("issue_selected", x),
                 background = "white",

@@ -683,6 +683,23 @@ check_images <- function(x){
 }
 
 
+# Check base64 
+check_base64 <- function(x){
+  # ifelse(grepl("data:image",x),
+  #        paste0('<a href="#" onclick="showImageModal(\'', x, '\')">
+  #                   <img src="', x, '" width="100" style="cursor:pointer;">
+  #                 </a>'),
+  #        x
+  #        )
+  
+  ifelse(grepl("data:image",x),
+         paste0('<img src="', x, '" width="100" style="cursor:pointer;">'),
+         x
+         
+         )
+}
+
+
 
 #' @title Check and format non-image hyperlinks
 #'
