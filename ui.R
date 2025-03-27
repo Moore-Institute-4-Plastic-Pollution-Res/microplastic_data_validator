@@ -32,6 +32,71 @@ function(request) {
     ),
     dashboardBody(
         shinyjs::useShinyjs(),
+        # Images pop up
+        # Modal that will show image preview
+        tags$div(
+          id = "imageModal", class = "modal fade", tabindex = "-1", role = "dialog",
+          tags$div(class = "modal-dialog modal-xl", role = "document",  # or modal-fullscreen
+                   tags$div(class = "modal-content",
+                            tags$div(class = "modal-header",
+                                     tags$h4(class = "modal-title", "*Image"),
+                                     tags$button(type = "button", class = "close", `data-dismiss` = "modal", "x")
+                            ),
+                            tags$div(class = "modal-body p-0", style = "margin: 0; overflow: hidden;",
+                                     tags$img(
+                                       id = "modalImage",
+                                       src = "",
+                                       style = "display: block; max-width: 100%; max-height: 90vh; margin: auto; object-fit: contain;"
+                                     ),
+                                     tags$button(
+                                       id = "prevBtn",
+                                       class = "btn btn-secondary",
+                                       "Previous",
+                                       style = "position: absolute; left: 10px; top: 50%; transform: translateY(-50%); z-index: 1051;"
+                                     ),
+                                     tags$button(
+                                       id = "nextBtn",
+                                       class = "btn btn-secondary",
+                                       "Next",
+                                       style = "position: absolute; right: 10px; top: 50%; transform: translateY(-50%); z-index: 1051;"
+                                     )
+                                     
+                            )
+                   )
+          )
+        ),
+        
+        tags$script(HTML("
+  var imageList = [];
+  var currentIndex = 0;
+
+  function showImageModal(src) {
+    $('#modalImage').attr('src', src);
+    $('#imageModal').modal('show');
+    currentIndex = imageList.indexOf(src);
+  }
+
+  function updateModalImage(direction) {
+    if (imageList.length === 0) return;
+
+    currentIndex += direction;
+    if (currentIndex < 0) currentIndex = imageList.length - 1;
+    if (currentIndex >= imageList.length) currentIndex = 0;
+
+    $('#modalImage').attr('src', imageList[currentIndex]);
+  }
+
+  $(document).on('click', '#prevBtn', function() {
+    updateModalImage(-1);
+  });
+
+  $(document).on('click', '#nextBtn', function() {
+    updateModalImage(1);
+  });
+")),
+        
+
+            
         tabItems(
             tabItem(
                 tabName = "about",

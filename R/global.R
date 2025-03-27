@@ -308,7 +308,7 @@ images_join <- function(zip_data, files_data, data_names) {
   # Base64 conversion ---
   base64_images <- lapply(image_files, function(img) {
     # mime type based on image extension
-    mime_type <- ifelse(grepl("(?i)\\.jpg", image_files),
+    mime_type <- ifelse(grepl("(?i)\\.jpg", img),
                         "image/jpeg",
                         "image/png")
     base64enc::dataURI(file = img, mime = mime_type)
@@ -332,8 +332,13 @@ images_join <- function(zip_data, files_data, data_names) {
         )
         print(image_lookup)
         df <- df |> left_join(image_lookup, by = setNames("ImagePath", col))
+        image_list_js <- paste0("imageList = [",
+                                paste0("", df$ImageBase64, "", collapse = ", "),
+                                "];")
+        run(js)
+        
       }
-    }
+    } else next
     return(df)
   })
   return(data_check)
@@ -424,8 +429,6 @@ validate_data <- function(files_data, data_names = NULL, file_rules = NULL, zip_
     }
     
     rules <- read_rules(file_rules)
-    
-    #data_formatted <- read_data(files_data = files_data, data_names = data_names)
     
     if (!"dataset" %in% names(rules) & length(names(data_formatted)) > 1) {
         stop("If there is more than one dataset then a dataset column must be specified in the rules file to describe which rule applies to which dataset.")
@@ -676,29 +679,30 @@ check_exists_in_zip <- function(zip_path, file_name) {
 #' check_images("https://example.com/text")
 #' @export
 check_images <- function(x){
-    ifelse(grepl("https://.*\\.png|https://.*\\.jpg", x),
-           paste0('<img src ="', x, '" height = "50"></img>'),
-           x
-           )
+  ifelse(grepl("https://.*\\.png|https://.*\\.jpg", x),
+         paste0('<img src ="', x, '" height = "50"></img>'),
+         x)
 }
+
 
 
 # Check base64 
+#' Title
+#'
+#' @param x 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 check_base64 <- function(x){
-  # ifelse(grepl("data:image",x),
-  #        paste0('<a href="#" onclick="showImageModal(\'', x, '\')">
-  #                   <img src="', x, '" width="100" style="cursor:pointer;">
-  #                 </a>'),
-  #        x
-  #        )
-  
   ifelse(grepl("data:image",x),
-         paste0('<img src="', x, '" width="100" style="cursor:pointer;">'),
+         paste0('<a href="#" onclick="showImageModal(\'', x, '\')">
+                    <img src="', x, '" width="100" style="cursor:pointer;">
+                  </a>'),
          x
-         
          )
 }
-
 
 
 #' @title Check and format non-image hyperlinks
