@@ -315,6 +315,14 @@ images_join <- function(zip_data, files_data, data_names, js_reactive) {
                         "image/png")
     base64enc::dataURI(file = img, mime = mime_type)
   })
+  
+  # base64_images <- Map(function(img, fname) {
+  #   mime_type <- ifelse(grepl("(?i)\\.jpg$", fname), "image/jpeg", "image/png")
+  #   encoded <- base64enc::dataURI(file = img, mime = mime_type)
+  #   paste0(encoded, "|||", fname)  # Embed filename for HTML
+  # }, image_files, basename(image_files))
+  # 
+  
   #Assign file names to the list
   names(base64_images) <- basename(image_files)
   
@@ -706,16 +714,30 @@ check_images <- function(x){
 #' @export
 #'
 #' @examples
+# check_base64 <- function(x) {
+#   ifelse(grepl("^data:image", x),
+#          {
+#            # Split into base64 and filename
+#            parts <- strsplit(x, "\\|\\|\\|")[[1]]
+#            base64 <- parts[1]
+#            filename <- ifelse(length(parts) > 1, parts[2], "Image")
+#            
+#            paste0('<a href="#" onclick="showImageModal(this)">',
+#                   '<img src="', base64, '" width="100" style="cursor:pointer;" data-filename="', filename, '">',
+#                   '</a>')
+#          },
+#          x
+#   )
+# }
+
 check_base64 <- function(x){
   ifelse(grepl("data:image",x),
          paste0('<a href="#" onclick="showImageModal(\'', x, '\')">
                     <img src="', x, '" width="100" style="cursor:pointer;">
                   </a>'),
          x
-         )
+  )
 }
-
-
 #' @title Check and format non-image hyperlinks
 #'
 #' @description This function checks if the input string contains a non-image hyperlink and formats it as an HTML anchor tag.
