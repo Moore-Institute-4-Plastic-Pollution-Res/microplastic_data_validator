@@ -1,6 +1,9 @@
 options(shiny.maxRequestSize=30*1024^2)
 function(input, output, session) {
   
+  # Reactive holder for images attached for QA/QC
+  image_list_js <- reactiveVal(NULL)
+  
   rules <- reactive({
     if(!isTruthy(config$rules_to_use)){
       file_rules = input$file_rules$datapath
@@ -25,7 +28,8 @@ function(input, output, session) {
         files_data = gsub("\\\\", "/", input$file$datapath[!grepl(".zip$", input$file$datapath)]),
         data_names = if(all(grepl(".csv", data_names))){data_names} else{NULL},
         zip_data = if(any(grepl(".zip$", input$file$datapath))){gsub("\\\\", "/",input$file$datapath[grepl(".zip$", input$file$datapath)])} else{NULL}, 
-        file_rules = rules()
+        file_rules = rules(),
+        js_reactive = image_list_js
       )
     }
     tryCatch({
@@ -118,6 +122,13 @@ function(input, output, session) {
       })
       
       output[[paste0("report_selected", x)]] <- DT::renderDataTable(server=TRUE,{
+       
+         observe({
+          if (!is.null(image_list_js())){
+            runjs(image_list_js())
+          }
+        })
+        
         if(isTruthy(input[[paste0("show_report", x, "_rows_selected")]]) & !is.null(rows_for_rules_selected())){
           datatable({rows_for_rules_selected() |>
               mutate(across(everything(), check_images)) |>

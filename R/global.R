@@ -292,7 +292,7 @@ unzip_files <- function(zip_data) {
 #' @export
 #'
 #' images_join(zip_data = valid_zip, files_data = valid_data)
-images_join <- function(zip_data, files_data, data_names) {
+images_join <- function(zip_data, files_data, data_names, js_reactive) {
   extracted_files <- unzip_files(zip_data)
   data_formatted <- read_data(files_data = files_data, data_names = data_names)
   # If empty zip file
@@ -302,6 +302,8 @@ images_join <- function(zip_data, files_data, data_names) {
   #Filter image files
   image_files <- extracted_files[grepl("(?i)\\.png|\\.jpg", extracted_files)]
   #No images in zip
+  print("Checking if data_formatted is available...")
+  print(str(data_formatted))
   if (length(image_files) == 0) {
     return(data_formatted)
   }
@@ -317,8 +319,8 @@ images_join <- function(zip_data, files_data, data_names) {
   names(base64_images) <- basename(image_files)
   
   # Store image list JS
-  all_base64 <- unlist(base64_images)
-  image_list_js <- paste0("imageList = [", paste0("'", all_base64, "'", collapse = ", "), "];")
+  # all_base64 <- unlist(base64_images)
+  # image_list_js <- paste0("imageList = [", paste0("'", all_base64, "'", collapse = ", "), "];")
   
   # Join data_formatted with image base64
   data_check <- lapply(data_formatted, function(df) {
@@ -337,7 +339,15 @@ images_join <- function(zip_data, files_data, data_names) {
         )
         print(image_lookup)
         df <- df |> left_join(image_lookup, by = setNames("ImagePath", col))
-      }
+      
+        # Extract base64 and assign to reactiveVal
+        js_reactive(paste0(
+          "imageList = [",
+          paste0("'", df$ImageBase64[!is.na(df$ImageBase64)], "'", collapse = ", "),
+          "];"
+        ))
+        
+        }
     } 
     return(df)
   })
@@ -382,7 +392,7 @@ images_join <- function(zip_data, files_data, data_names) {
 #' @importFrom shiny isTruthy
 #' @importFrom utils read.csv
 #' @export
-validate_data <- function(files_data, data_names = NULL, file_rules = NULL, zip_data = NULL) {
+validate_data <- function(files_data, data_names = NULL, file_rules = NULL, zip_data = NULL, js_reactive = NULL) {
     if(check_for_malicious_files(c(files_data, file_rules))){
         stop(paste("Data or rules files cannot be of any of these types:", "_exe", "a6p", "ac", "acr", "action", "air", "apk", "app",
                    "applescript", "awk", "bas", "bat", "bin", "cgi", "chm",
@@ -423,7 +433,8 @@ validate_data <- function(files_data, data_names = NULL, file_rules = NULL, zip_
                        "wcm", "widget", "wmf", "workflow", "wpk", "ws", "wsc",
                        "wsf", "wsh", "xap", "xqt", "zlq"))
         }
-      data <- images_join(zip_data = zip_data, files_data = files_data, data_names = data_names)
+      data_formatted <- images_join(zip_data = zip_data, files_data = files_data, 
+                                    data_names = data_names, js_reactive = js_reactive)
     } else{
       data_formatted <- read_data(files_data = files_data, data_names = data_names)
     }
