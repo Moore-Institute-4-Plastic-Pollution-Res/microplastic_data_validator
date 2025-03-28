@@ -315,6 +315,11 @@ images_join <- function(zip_data, files_data, data_names) {
   })
   #Assign file names to the list
   names(base64_images) <- basename(image_files)
+  
+  # Store image list JS
+  all_base64 <- unlist(base64_images)
+  image_list_js <- paste0("imageList = [", paste0("'", all_base64, "'", collapse = ", "), "];")
+  
   # Join data_formatted with image base64
   data_check <- lapply(data_formatted, function(df) {
     # Identify column with image extensions
@@ -332,13 +337,8 @@ images_join <- function(zip_data, files_data, data_names) {
         )
         print(image_lookup)
         df <- df |> left_join(image_lookup, by = setNames("ImagePath", col))
-        image_list_js <- paste0("imageList = [",
-                                paste0("", df$ImageBase64, "", collapse = ", "),
-                                "];")
-        run(js)
-        
       }
-    } else next
+    } 
     return(df)
   })
   return(data_check)
@@ -423,7 +423,7 @@ validate_data <- function(files_data, data_names = NULL, file_rules = NULL, zip_
                        "wcm", "widget", "wmf", "workflow", "wpk", "ws", "wsc",
                        "wsf", "wsh", "xap", "xqt", "zlq"))
         }
-      data_formatted <- images_join(zip_data = zip_data, files_data = files_data, data_names = data_names)
+      data <- images_join(zip_data = zip_data, files_data = files_data, data_names = data_names)
     } else{
       data_formatted <- read_data(files_data = files_data, data_names = data_names)
     }
