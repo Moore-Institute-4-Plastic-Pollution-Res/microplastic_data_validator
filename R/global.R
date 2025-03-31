@@ -315,20 +315,8 @@ images_join <- function(zip_data, files_data, data_names, js_reactive) {
                         "image/png")
     base64enc::dataURI(file = img, mime = mime_type)
   })
-  
-  # base64_images <- Map(function(img, fname) {
-  #   mime_type <- ifelse(grepl("(?i)\\.jpg$", fname), "image/jpeg", "image/png")
-  #   encoded <- base64enc::dataURI(file = img, mime = mime_type)
-  #   paste0(encoded, "|||", fname)  # Embed filename for HTML
-  # }, image_files, basename(image_files))
-  # 
-  
   #Assign file names to the list
   names(base64_images) <- basename(image_files)
-  
-  # Store image list JS
-  # all_base64 <- unlist(base64_images)
-  # image_list_js <- paste0("imageList = [", paste0("'", all_base64, "'", collapse = ", "), "];")
   
   # Join data_formatted with image base64
   data_check <- lapply(data_formatted, function(df) {
@@ -344,14 +332,18 @@ images_join <- function(zip_data, files_data, data_names, js_reactive) {
         image_lookup <- tibble(
           ImagePath = names(base64_images),
           ImageBase64 = unlist(base64_images)
-        )
+        ) 
         print(image_lookup)
         df <- df |> left_join(image_lookup, by = setNames("ImagePath", col))
       
+        # Replace ImageBase64 rows that repeat as blank 
+        df$ImageBase64 <- ifelse(duplicated(df$ImageBase64),"",df$ImageBase64)
+        
         # Extract base64 and assign to reactiveVal
+        # remove blanks in image carousel
         js_reactive(paste0(
           "imageList = [",
-          paste0("'", df$ImageBase64[!is.na(df$ImageBase64)], "'", collapse = ", "),
+          paste0("'", df$ImageBase64[!is.na(df$ImageBase64) &df$ImageBase64 != ""], "'", collapse = ", "),
           "];"
         ))
         
@@ -705,8 +697,7 @@ check_images <- function(x){
 
 
 
-# Check base64 
-#' Title
+#' @title Check and convert Base64 to HTML format
 #'
 #' @param x 
 #'
@@ -714,21 +705,6 @@ check_images <- function(x){
 #' @export
 #'
 #' @examples
-# check_base64 <- function(x) {
-#   ifelse(grepl("^data:image", x),
-#          {
-#            # Split into base64 and filename
-#            parts <- strsplit(x, "\\|\\|\\|")[[1]]
-#            base64 <- parts[1]
-#            filename <- ifelse(length(parts) > 1, parts[2], "Image")
-#            
-#            paste0('<a href="#" onclick="showImageModal(this)">',
-#                   '<img src="', base64, '" width="100" style="cursor:pointer;" data-filename="', filename, '">',
-#                   '</a>')
-#          },
-#          x
-#   )
-# }
 
 check_base64 <- function(x){
   ifelse(grepl("data:image",x),
@@ -738,6 +714,40 @@ check_base64 <- function(x){
          x
   )
 }
+
+
+
+# check_base64 <- function(x){
+#   ifelse(grepl("data:image",x),
+#          paste0('<a href="#" onclick="showImageModal(\'', x, '\')">
+#                     <img src="', x, '" width="100" style="cursor:pointer;">
+#                   </a>'),
+#          x
+#   )
+# }
+
+
+# check_base64 <- function(x){
+#   if(grepl("data:image",x)){
+#     file_names <- sub("_separate_.","",x$ImageBase64)
+#     base64 <- sub("._separate_", "", x$ImageBase64)
+#     html <- paste0(
+#       '<a href="#" onclick="showImageModal(\'', base64, '\')">',
+#       '<img src="', base64, '" width="100" style="cursor:pointer;" data-filename="', file_names, '">',
+#       '</a>'
+#     )
+#     return(html)
+# 
+#   } else{
+#     return(x)
+#   }
+# }
+
+
+
+
+
+
 #' @title Check and format non-image hyperlinks
 #'
 #' @description This function checks if the input string contains a non-image hyperlink and formats it as an HTML anchor tag.
